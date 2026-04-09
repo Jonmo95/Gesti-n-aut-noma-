@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutónomaGest — Control Económico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0d;
+    --surface: #1a1a17;
+    --surface2: #242420;
+    --surface3: #2e2e29;
+    --border: #3a3a34;
+    --accent: #e8d5a3;
+    --accent2: #c4a96d;
+    --accent3: #7fba8a;
+    --red: #d97070;
+    --blue: #7fb3d9;
+    --text: #f0ede6;
+    --text2: #a8a49a;
+    --text3: #6a6660;
+    --radius: 8px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Instrument Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .sidebar-logo p {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .sidebar-nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+  .nav-section { margin-bottom: 20px; }
+  .nav-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 10px;
+    margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-size: 13.5px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface3); color: var(--accent); border-color: var(--border); }
+  .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar h2 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); }
+  .topbar-controls { display: flex; gap: 10px; align-items: center; }
+  .month-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+  }
+  .month-selector select, .month-selector input {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+  .month-selector option { background: var(--surface2); }
+
+  /* CONTENT */
+  .content { padding: 28px; flex: 1; }
+
+  /* PANELS */
+  .panel-hidden { display: none !important; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+  .stat-card.green::before { background: var(--accent3); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .stat-value.positive { color: var(--accent3); }
+  .stat-value.negative { color: var(--red); }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* FORMS */
+  .form-group { margin-bottom: 14px; }
+  .form-row { display: grid; gap: 12px; }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 5px;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary { background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--surface2); }
+  .btn-danger { background: #3d1f1f; color: var(--red); border: 1px solid #5a2f2f; }
+  .btn-danger:hover { background: #4d2525; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-icon { padding: 7px; background: var(--surface3); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; color: var(--text2); font-size: 14px; transition: all 0.15s; }
+  .btn-icon:hover { background: var(--surface2); color: var(--text); }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #1e1e1b;
+    color: var(--text2);
+    font-size: 13.5px;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); color: var(--text); }
+  .td-mono { font-family: 'DM Mono', monospace; font-size: 13px; }
+  .td-amount { font-family: 'DM Mono', monospace; font-size: 13px; }
+  .td-positive { color: var(--accent3) !important; }
+  .td-negative { color: var(--red) !important; }
+  .td-accent { color: var(--accent) !important; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-green { background: #1a2e1d; color: var(--accent3); }
+  .badge-red { background: #2e1a1a; color: var(--red); }
+  .badge-gold { background: #2e2515; color: var(--accent); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab {
+    padding: 10px 18px;
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* RESUMEN MENSUAL */
+  .resumen-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid #1e1e1b;
+  }
+  .resumen-row:last-child { border-bottom: none; }
+  .resumen-label { color: var(--text2); font-size: 13.5px; }
+  .resumen-label.indent { padding-left: 16px; color: var(--text3); font-size: 13px; }
+  .resumen-value { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; }
+  .resumen-section { font-weight: 600; color: var(--text); font-size: 13px; }
+  .resumen-divider { border-top: 1px solid var(--border); margin: 8px 0; }
+  .resumen-total { font-family: 'DM Serif Display', serif; font-size: 18px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 520px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* TOGGLE */
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle {
+    width: 36px; height: 20px;
+    background: var(--surface3);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent3); border-color: var(--accent3); }
+  .toggle::after {
+    content: '';
+    width: 14px; height: 14px;
+    background: var(--text);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px; left: 2px;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 18px; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state p { font-size: 13px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface3);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* CHART */
+  .chart-bar-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .chart-bar-row { display: flex; align-items: center; gap: 10px; }
+  .chart-bar-label { width: 80px; font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-align: right; flex-shrink: 0; }
+  .chart-bar-track { flex: 1; background: var(--surface3); border-radius: 3px; height: 14px; overflow: hidden; }
+  .chart-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .chart-bar-val { width: 80px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text2); }
+
+  /* PROYECCION */
+  .proy-row { display: grid; grid-template-columns: 100px 1fr 1fr 1fr 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e1e1b; }
+  .proy-header { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* CHIPS */
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; background: var(--surface3); border: 1px solid var(--border); color: var(--text2); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 56px; }
+    .sidebar-logo h1, .sidebar-logo p, .nav-label, .nav-item span { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .main { margin-left: 56px; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .form-row.cols-4 { grid-template-columns: 1fr 1fr; }
+    .form-row.cols-3 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Autónoma<br>Gest</h1>
+    <p>Control Económico</p>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <div class="nav-item active" onclick="showPanel('dashboard')">
+        <span class="icon">◈</span><span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('operaciones')">
+        <span class="icon">⊕</span><span>Operaciones</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('resumen')">
+        <span class="icon">◉</span><span>Resumen Mensual</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('proyeccion')">
+        <span class="icon">◌</span><span>Proyección</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Gestión</div>
+      <div class="nav-item" onclick="showPanel('clientes')">
+        <span class="icon">◎</span><span>Clientes Fijos</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('servicios')">
+        <span class="icon">◇</span><span>Servicios</span>
+      </div>
+      <div class="nav-item" onclick="showPanel('configuracion')">
+        <span class="icon">◈</span><span>Configuración</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Análisis</div>
+      <div class="nav-item" onclick="showPanel('informes')">
+        <span class="icon">▦</span><span>Informes</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <h2 id="panel-title">Dashboard</h2>
+  <div class="topbar-controls">
+    <div class="month-selector">
+      <select id="sel-mes" onchange="onMonthChange()">
+        <option value="1">Enero</option><option value="2">Febrero</option>
+        <option value="3">Marzo</option><option value="4">Abril</option>
+        <option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option>
+        <option value="9">Septiembre</option><option value="10">Octubre</option>
+        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+      <input type="number" id="sel-anio" min="2020" max="2035" style="width:70px" onchange="onMonthChange()">
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div id="panel-dashboard">
+    <div class="grid-4" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-label">Ingresos Totales</div>
+        <div class="stat-value positive" id="dash-ingresos">0,00 €</div>
+        <div class="stat-sub">Fijos + Variables neto</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Gastos Totales</div>
+        <div class="stat-value negative" id="dash-gastos">0,00 €</div>
+        <div class="stat-sub">Todos los gastos</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Beneficio</div>
+        <div class="stat-value" id="dash-beneficio">0,00 €</div>
+        <div class="stat-sub">Antes de retirada</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Ahorro Acumulado</div>
+        <div class="stat-value" id="dash-acumulado">0,00 €</div>
+        <div class="stat-sub">Histórico total</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Composición de Ingresos</div>
+        <div class="chart-bar-wrap" id="dash-chart-ingresos">
+          <div class="empty-state"><p>Sin datos este mes</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Composición de Gastos</div>
+        <div class="chart-bar-wrap" id="dash-chart-gastos">
+          <div class="empty-state"><p>Sin datos este mes</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Últimas Operaciones</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Importe</th>
+          </tr></thead>
+          <tbody id="dash-operaciones">
+            <tr><td colspan="4"><div class="empty-state"><p>Sin operaciones</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPERACIONES -->
+  <div id="panel-operaciones" class="panel-hidden">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('ingresos-var')">Ingresos Variables</div>
+      <div class="tab" onclick="showTab('gastos-tab')">Gastos</div>
+      <div class="tab" onclick="showTab('retiros-tab')">Retiros Personales</div>
+    </div>
+
+    <!-- INGRESOS VARIABLES -->
+    <div id="tab-ingresos-var">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
+        <button class="btn btn-primary" onclick="openModal('modal-ingreso')">+ Nuevo Ingreso</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Fecha</th><th>Cliente</th><th>Servicio</th>
+              <th>Bruto</th><th>Comisión</th><th>Neto</th><th>Obs.</th><th></th>
+            </tr></thead>
+            <tbody id="tabla-ingresos">
+              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⊕</div><p>No hay ingresos registrados este mes</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GASTOS -->
+    <div id="tab-gastos-tab" class="panel-hidden">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
+        <button class="btn btn-primary" onclick="openModal('modal-gasto')">+ Nuevo Gasto</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Importe</th><th>Tipo</th><th></th>
+            </tr></thead>
+            <tbody id="tabla-gastos">
+              <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◌</div><p>No hay gastos registrados este mes</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RETIROS -->
+    <div id="tab-retiros-tab" class="panel-hidden">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
+        <button class="btn btn-primary" onclick="openModal('modal-retiro')">+ Nuevo Retiro</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Mes/Año</th><th>Concepto</th><th>Importe</th><th></th>
+            </tr></thead>
+            <tbody id="tabla-retiros">
+              <tr><td colspan="4"><div class="empty-state"><div class="empty-icon">◎</div><p>No hay retiros registrados este mes</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUMEN MENSUAL -->
+  <div id="panel-resumen" class="panel-hidden">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Cuenta de Resultados</div>
+
+        <div class="resumen-row">
+          <span class="resumen-label resumen-section">INGRESOS</span>
+          <span class="resumen-value td-accent" id="res-ingresos-total">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Ingresos fijos (clientes)</span>
+          <span class="resumen-value" id="res-ingresos-fijos">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Ingresos variables brutos</span>
+          <span class="resumen-value" id="res-var-brutos">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">− Comisión gestoría variables</span>
+          <span class="resumen-value td-negative" id="res-comision-gest">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Ingreso variable neto</span>
+          <span class="resumen-value" id="res-var-neto">0,00 €</span>
+        </div>
+
+        <div class="resumen-divider"></div>
+
+        <div class="resumen-row">
+          <span class="resumen-label resumen-section">GASTOS</span>
+          <span class="resumen-value td-negative" id="res-gastos-total">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Cuota autónomo</span>
+          <span class="resumen-value" id="res-g-autonomo">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">IRPF estimado</span>
+          <span class="resumen-value" id="res-g-irpf">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Gestoría</span>
+          <span class="resumen-value" id="res-g-gestoria">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Colegiación mensual</span>
+          <span class="resumen-value" id="res-g-coleg">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label indent">Otros gastos</span>
+          <span class="resumen-value" id="res-g-otros">0,00 €</span>
+        </div>
+
+        <div class="resumen-divider"></div>
+
+        <div class="resumen-row" style="padding:12px 0">
+          <span class="resumen-label resumen-section" style="font-size:15px">BENEFICIO</span>
+          <span class="resumen-value resumen-total" id="res-beneficio" style="color:var(--accent3)">0,00 €</span>
+        </div>
+        <div class="resumen-row">
+          <span class="resumen-label">− Retirada personal</span>
+          <span class="resumen-value td-negative" id="res-retirada">0,00 €</span>
+        </div>
+        <div class="resumen-row" style="padding:12px 0; background:var(--surface2); border-radius:var(--radius); padding:12px;">
+          <span class="resumen-label" style="font-weight:600; color:var(--text)">AHORRO MENSUAL</span>
+          <span class="resumen-value resumen-total" id="res-ahorro" style="color:var(--accent)">0,00 €</span>
+        </div>
+        <div class="resumen-row" style="margin-top:8px">
+          <span class="resumen-label">Ahorro acumulado</span>
+          <span class="resumen-value td-accent" id="res-acumulado">0,00 €</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">Desglose Visual</div>
+          <div class="chart-bar-wrap" id="res-chart"></div>
+        </div>
+        <div class="card" style="margin-top:0">
+          <div class="card-title">Clientes Fijos este Mes</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Cliente</th><th>Importe Repartido</th></tr></thead>
+              <tbody id="res-clientes-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROYECCIÓN -->
+  <div id="panel-proyeccion" class="panel-hidden">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Parámetros de Simulación</div>
+      <div class="form-row cols-3">
+        <div class="form-group">
+          <label>Meses a proyectar</label>
+          <input type="number" id="proy-meses" value="6" min="1" max="24">
+        </div>
+        <div class="form-group">
+          <label>Ingresos variables previstos/mes</label>
+          <input type="number" id="proy-variables" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Gastos extra previstos/mes</label>
+          <input type="number" id="proy-gastos-extra" value="0" step="0.01">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calcularProyeccion()">Calcular Proyección</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Proyección Mensual</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Mes</th><th>Ingresos Fijos</th><th>Variables Previstos</th>
+            <th>Gastos Est.</th><th>Beneficio Est.</th><th>Ahorro Est.</th><th>Acumulado</th>
+          </tr></thead>
+          <tbody id="tabla-proyeccion">
+            <tr><td colspan="7"><div class="empty-state"><p>Configura los parámetros y pulsa Calcular</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div id="panel-clientes" class="panel-hidden">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
+      <button class="btn btn-primary" onclick="openModal('modal-cliente')">+ Nuevo Cliente</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Cliente</th><th>Importe Fijo</th><th>Importe Repartido</th><th>Estado</th><th>Notas</th><th></th>
+          </tr></thead>
+          <tbody id="tabla-clientes">
+            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◎</div><p>No hay clientes fijos. Añade el primero.</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICIOS -->
+  <div id="panel-servicios" class="panel-hidden">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:14px">
+      <button class="btn btn-primary" onclick="openModal('modal-servicio')">+ Nuevo Servicio</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Servicio</th><th>Categoría</th><th>Precio Base</th><th>% Comisión</th><th>Neto Profesional</th><th>Estado</th><th></th>
+          </tr></thead>
+          <tbody id="tabla-servicios">
+            <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◇</div><p>No hay servicios. Añade el primero.</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div id="panel-configuracion" class="panel-hidden">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Parámetros Generales</div>
+        <div class="form-group">
+          <label>% Comisión Gestoría (sobre variables)</label>
+          <input type="number" id="cfg-comision-gestoria" value="5" step="0.1" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>% IRPF</label>
+          <input type="number" id="cfg-irpf" value="15" step="0.1" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Cuota Autónomo Mensual (€)</label>
+          <input type="number" id="cfg-autonomo" value="294" step="0.01" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Cuota Colegiación Trimestral (€)</label>
+          <input type="number" id="cfg-coleg-trimestral" value="0" step="0.01" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Gasto Base Gestoría (€/mes)</label>
+          <input type="number" id="cfg-gasto-gestoria" value="0" step="0.01" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Nómina Mensual por Defecto (€)</label>
+          <input type="number" id="cfg-nomina" value="0" step="0.01" onchange="saveConfig()">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Parámetros de Clientes Fijos</div>
+        <div class="form-group">
+          <label>% Reparto sobre Clientes Fijos</label>
+          <input type="number" id="cfg-pct-reparto" value="80" step="0.1" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Importe Fijo Adicional por Cliente (€)</label>
+          <input type="number" id="cfg-fijo-adicional" value="0" step="0.01" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Facturación Objetivo Total (€)</label>
+          <input type="number" id="cfg-objetivo" value="0" step="0.01" onchange="saveConfig()">
+        </div>
+        <div class="form-group">
+          <label>Servicio Acordado (Referencia)</label>
+          <input type="text" id="cfg-servicio-ref" placeholder="Ej: Asesoría mensual" oninput="saveConfig()">
+        </div>
+        <div style="margin-top:16px; padding:14px; background:var(--surface2); border-radius:var(--radius); border:1px solid var(--border)">
+          <div style="font-size:12px; color:var(--text3); margin-bottom:8px; font-family:'DM Mono',monospace;">FÓRMULA REPARTO</div>
+          <div style="font-size:12px; color:var(--text2)">Importe repartido = (Importe fijo × % reparto / 100) + Importe adicional</div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn btn-secondary" onclick="exportData()">⇩ Exportar Datos (JSON)</button>
+          <button class="btn btn-secondary" style="margin-left:8px" onclick="importData()">⇧ Importar Datos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFORMES -->
+  <div id="panel-informes" class="panel-hidden">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Ingresos por Cliente</div>
+        <div class="chart-bar-wrap" id="inf-clientes-chart">
+          <div class="empty-state"><p>Sin datos</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Gastos por Categoría</div>
+        <div class="chart-bar-wrap" id="inf-gastos-chart">
+          <div class="empty-state"><p>Sin datos</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Evolución Mensual del Ahorro</div>
+      <div class="chart-bar-wrap" id="inf-ahorro-chart">
+        <div class="empty-state"><p>Sin datos históricos</p></div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:4px">
+      <button class="btn btn-secondary" onclick="exportCSV()">⇩ Exportar CSV</button>
+      <button class="btn btn-primary" onclick="exportPDF()">⇩ Exportar Resumen PDF</button>
+    </div>
+  </div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALES -->
+
+<!-- Modal Ingreso Variable -->
+<div class="modal-overlay" id="modal-ingreso">
+  <div class="modal">
+    <div class="modal-title">Nuevo Ingreso Variable</div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="ing-fecha">
+      </div>
+      <div class="form-group">
+        <label>Cliente</label>
+        <input type="text" id="ing-cliente" placeholder="Nombre del cliente">
+      </div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Servicio</label>
+        <select id="ing-servicio" onchange="calcIngreso()">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Importe Bruto (€)</label>
+        <input type="number" id="ing-bruto" step="0.01" oninput="calcIngreso()">
+      </div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Comisión Gestoría (€)</label>
+        <input type="number" id="ing-comision" step="0.01" readonly style="opacity:.6">
+      </div>
+      <div class="form-group">
+        <label>Importe Neto (€)</label>
+        <input type="number" id="ing-neto" step="0.01" readonly style="opacity:.6">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observaciones</label>
+      <textarea id="ing-obs" placeholder="Notas adicionales..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-ingreso')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarIngreso()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Gasto -->
+<div class="modal-overlay" id="modal-gasto">
+  <div class="modal">
+    <div class="modal-title">Nuevo Gasto</div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="gst-fecha">
+      </div>
+      <div class="form-group">
+        <label>Categoría</label>
+        <select id="gst-categoria">
+          <option value="autonomo">Autónomo</option>
+          <option value="colegiacion">Colegiación</option>
+          <option value="gestoria">Gestoría</option>
+          <option value="variable">Variable</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Importe (€)</label>
+        <input type="number" id="gst-importe" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="gst-tipo">
+          <option value="fijo">Fijo</option>
+          <option value="variable">Variable</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <input type="text" id="gst-descripcion" placeholder="Concepto del gasto">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gasto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarGasto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Retiro -->
+<div class="modal-overlay" id="modal-retiro">
+  <div class="modal">
+    <div class="modal-title">Nuevo Retiro Personal</div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Mes</label>
+        <select id="ret-mes">
+          <option value="1">Enero</option><option value="2">Febrero</option>
+          <option value="3">Marzo</option><option value="4">Abril</option>
+          <option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option>
+          <option value="9">Septiembre</option><option value="10">Octubre</option>
+          <option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Año</label>
+        <input type="number" id="ret-anio" value="2025">
+      </div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Importe (€)</label>
+        <input type="number" id="ret-importe" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Concepto</label>
+        <input type="text" id="ret-concepto" placeholder="Ej: Nómina personal">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-retiro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarRetiro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-title">Nuevo Cliente Fijo</div>
+    <div class="form-group">
+      <label>Nombre del Cliente</label>
+      <input type="text" id="cli-nombre" placeholder="Nombre del cliente">
+    </div>
+    <div class="form-group">
+      <label>Importe Fijo Mensual (€)</label>
+      <input type="number" id="cli-importe" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="cli-notas" placeholder="Observaciones..."></textarea>
+    </div>
+    <div class="toggle-wrap" style="margin-bottom:14px">
+      <div class="toggle on" id="cli-activo-toggle" onclick="toggleCliente()"></div>
+      <span style="font-size:13px; color:var(--text2)">Cliente activo</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Servicio -->
+<div class="modal-overlay" id="modal-servicio">
+  <div class="modal">
+    <div class="modal-title">Nuevo Servicio</div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Nombre del Servicio</label>
+        <input type="text" id="srv-nombre" placeholder="Nombre">
+      </div>
+      <div class="form-group">
+        <label>Categoría</label>
+        <input type="text" id="srv-categoria" placeholder="Ej: Consultoría">
+      </div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Precio Base (€)</label>
+        <input type="number" id="srv-precio" step="0.01" oninput="calcServicio()">
+      </div>
+      <div class="form-group">
+        <label>% Comisión</label>
+        <input type="number" id="srv-comision" step="0.1" value="0" oninput="calcServicio()">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Neto Profesional (€)</label>
+      <input type="number" id="srv-neto" readonly style="opacity:.6">
+    </div>
+    <div class="toggle-wrap" style="margin-bottom:14px">
+      <div class="toggle on" id="srv-activo-toggle" onclick="toggleServicio()"></div>
+      <span style="font-size:13px; color:var(--text2)">Servicio activo</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-servicio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarServicio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ========== STATE ==========
+let state = {
+  config: {
+    comisionGestoria: 5,
+    irpf: 15,
+    autonomo: 294,
+    colegTrimestral: 0,
+    gastoGestoria: 0,
+    nomina: 0,
+    pctReparto: 80,
+    fijoAdicional: 0,
+    objetivo: 0,
+    servicioRef: ''
+  },
+  clientes: [],
+  servicios: [],
+  ingresos: [],
+  gastos: [],
+  retiros: [],
+  editId: null
+};
+
+let currentMes, currentAnio;
+let clienteActivoTemp = true;
+let servicioActivoTemp = true;
+
+// ========== INIT ==========
+function init() {
+  const now = new Date();
+  currentMes = now.getMonth() + 1;
+  currentAnio = now.getFullYear();
+  document.getElementById('sel-mes').value = currentMes;
+  document.getElementById('sel-anio').value = currentAnio;
+  loadFromStorage();
+  syncConfigUI();
+  renderAll();
+}
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('autonomagest_v1');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) {}
+  }
+}
+
+function save() {
+  localStorage.setItem('autonomagest_v1', JSON.stringify(state));
+}
+
+function onMonthChange() {
+  currentMes = parseInt(document.getElementById('sel-mes').value);
+  currentAnio = parseInt(document.getElementById('sel-anio').value);
+  renderAll();
+}
+
+// ========== NAVIGATION ==========
+let currentPanel = 'dashboard';
+let currentTab = 'ingresos-var';
+
+function showPanel(name) {
+  document.getElementById('panel-' + currentPanel).classList.add('panel-hidden');
+  document.getElementById('panel-' + name).classList.remove('panel-hidden');
+  currentPanel = name;
+  const titles = {
+    dashboard: 'Dashboard',
+    operaciones: 'Registro de Operaciones',
+    resumen: 'Resumen Mensual',
+    proyeccion: 'Proyección',
+    clientes: 'Clientes Fijos',
+    servicios: 'Catálogo de Servicios',
+    configuracion: 'Configuración',
+    informes: 'Informes y Análisis'
+  };
+  document.getElementById('panel-title').textContent = titles[name] || name;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.getAttribute('onclick') && el.getAttribute('onclick').includes("'" + name + "'")) {
+      el.classList.add('active');
+    }
+  });
+  renderAll();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + currentTab).classList.add('panel-hidden');
+  document.getElementById('tab-' + name).classList.remove('panel-hidden');
+  currentTab = name;
+}
+
+// ========== MODALS ==========
+function openModal(id) {
+  if (id === 'modal-ingreso') populateServiciosSelect();
+  if (id === 'modal-retiro') {
+    document.getElementById('ret-mes').value = currentMes;
+    document.getElementById('ret-anio').value = currentAnio;
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  state.editId = null;
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ========== TOAST ==========
+function toast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? 'var(--red)' : 'var(--accent3)';
+  t.style.color = isError ? 'var(--red)' : 'var(--accent3)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ========== FORMATTING ==========
+const fmt = n => (n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const fmtN = n => (n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const id = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// ========== CONFIG ==========
+function saveConfig() {
+  state.config.comisionGestoria = parseFloat(document.getElementById('cfg-comision-gestoria').value) || 0;
+  state.config.irpf = parseFloat(document.getElementById('cfg-irpf').value) || 0;
+  state.config.autonomo = parseFloat(document.getElementById('cfg-autonomo').value) || 0;
+  state.config.colegTrimestral = parseFloat(document.getElementById('cfg-coleg-trimestral').value) || 0;
+  state.config.gastoGestoria = parseFloat(document.getElementById('cfg-gasto-gestoria').value) || 0;
+  state.config.nomina = parseFloat(document.getElementById('cfg-nomina').value) || 0;
+  state.config.pctReparto = parseFloat(document.getElementById('cfg-pct-reparto').value) || 0;
+  state.config.fijoAdicional = parseFloat(document.getElementById('cfg-fijo-adicional').value) || 0;
+  state.config.objetivo = parseFloat(document.getElementById('cfg-objetivo').value) || 0;
+  state.config.servicioRef = document.getElementById('cfg-servicio-ref').value;
+  save();
+  renderAll();
+  toast('Configuración guardada');
+}
+
+function syncConfigUI() {
+  document.getElementById('cfg-comision-gestoria').value = state.config.comisionGestoria;
+  document.getElementById('cfg-irpf').value = state.config.irpf;
+  document.getElementById('cfg-autonomo').value = state.config.autonomo;
+  document.getElementById('cfg-coleg-trimestral').value = state.config.colegTrimestral;
+  document.getElementById('cfg-gasto-gestoria').value = state.config.gastoGestoria;
+  document.getElementById('cfg-nomina').value = state.config.nomina;
+  document.getElementById('cfg-pct-reparto').value = state.config.pctReparto;
+  document.getElementById('cfg-fijo-adicional').value = state.config.fijoAdicional;
+  document.getElementById('cfg-objetivo').value = state.config.objetivo;
+  document.getElementById('cfg-servicio-ref').value = state.config.servicioRef || '';
+}
+
+// ========== CALCULATIONS ==========
+function calcImporteRepartido(cliente) {
+  return (cliente.importe * state.config.pctReparto / 100) + state.config.fijoAdicional;
+}
+
+function calcMensual(mes, anio) {
+  const cfg = state.config;
+  const ingFijos = state.clientes
+    .filter(c => c.activo)
+    .reduce((acc, c) => acc + calcImporteRepartido(c), 0);
+
+  const ingVar = state.ingresos.filter(i => i.mes == mes && i.anio == anio);
+  const varBrutos = ingVar.reduce((a, i) => a + i.bruto, 0);
+  const comisionGest = varBrutos * cfg.comisionGestoria / 100;
+  const varNeto = varBrutos - comisionGest;
+  const ingTotal = ingFijos + varNeto;
+
+  const gastosReg = state.gastos.filter(g => g.mes == mes && g.anio == anio);
+  const gAutonomo = cfg.autonomo;
+  const gIRPF = ingTotal * cfg.irpf / 100;
+  const gGestoria = cfg.gastoGestoria;
+  const gColeg = cfg.colegTrimestral / 3;
+  const gOtros = gastosReg.reduce((a, g) => a + g.importe, 0);
+  const gTotal = gAutonomo + gIRPF + gGestoria + gColeg + gOtros;
+
+  const retiros = state.retiros.filter(r => r.mes == mes && r.anio == anio);
+  const retirada = retiros.reduce((a, r) => a + r.importe, 0);
+
+  const beneficio = ingTotal - gTotal;
+  const ahorro = beneficio - retirada;
+
+  // Acumulado: suma todos los meses anteriores
+  let acumulado = 0;
+  const allMonths = [];
+  for (let y = 2020; y <= anio; y++) {
+    for (let m = 1; m <= 12; m++) {
+      if (y == anio && m >= mes) break;
+      if (y < anio || (y == anio && m < mes)) allMonths.push({m, y});
+    }
+  }
+  // Simplificado: calcular acumulado sobre meses con datos
+  const mesesConDatos = new Set([
+    ...state.ingresos.map(i => `${i.anio}-${i.mes}`),
+    ...state.gastos.map(g => `${g.anio}-${g.mes}`),
+    ...state.retiros.map(r => `${r.anio}-${r.mes}`)
+  ]);
+  mesesConDatos.forEach(key => {
+    const [y, m] = key.split('-').map(Number);
+    if (y < anio || (y == anio && m < mes)) {
+      const prev = calcMensualSimple(m, y);
+      acumulado += prev.ahorro;
+    }
+  });
+
+  return { ingFijos, varBrutos, comisionGest, varNeto, ingTotal,
+           gAutonomo, gIRPF, gGestoria, gColeg, gOtros, gTotal,
+           retirada, beneficio, ahorro, acumulado };
+}
+
+function calcMensualSimple(mes, anio) {
+  const cfg = state.config;
+  const ingFijos = state.clientes.filter(c => c.activo).reduce((a,c) => a + calcImporteRepartido(c), 0);
+  const ingVar = state.ingresos.filter(i => i.mes == mes && i.anio == anio);
+  const varBrutos = ingVar.reduce((a,i) => a + i.bruto, 0);
+  const comisionGest = varBrutos * cfg.comisionGestoria / 100;
+  const varNeto = varBrutos - comisionGest;
+  const ingTotal = ingFijos + varNeto;
+  const gTotal = cfg.autonomo + (ingTotal * cfg.irpf / 100) + cfg.gastoGestoria + (cfg.colegTrimestral/3) +
+    state.gastos.filter(g => g.mes == mes && g.anio == anio).reduce((a,g) => a+g.importe, 0);
+  const retirada = state.retiros.filter(r => r.mes == mes && r.anio == anio).reduce((a,r) => a+r.importe, 0);
+  return { ingTotal, gTotal, beneficio: ingTotal - gTotal, ahorro: (ingTotal - gTotal) - retirada };
+}
+
+// ========== RENDER ALL ==========
+function renderAll() {
+  renderTablaClientes();
+  renderTablaServicios();
+  renderTablaIngresos();
+  renderTablaGastos();
+  renderTablaRetiros();
+  renderResumen();
+  renderDashboard();
+  renderInformes();
+}
+
+// ========== CLIENTES ==========
+function toggleCliente() {
+  clienteActivoTemp = !clienteActivoTemp;
+  document.getElementById('cli-activo-toggle').classList.toggle('on', clienteActivoTemp);
+}
+
+function guardarCliente() {
+  const nombre = document.getElementById('cli-nombre').value.trim();
+  const importe = parseFloat(document.getElementById('cli-importe').value) || 0;
+  if (!nombre) { toast('El nombre es obligatorio', true); return; }
+  if (state.editId) {
+    const c = state.clientes.find(x => x.id === state.editId);
+    if (c) { c.nombre = nombre; c.importe = importe; c.notas = document.getElementById('cli-notas').value; c.activo = clienteActivoTemp; }
+  } else {
+    state.clientes.push({ id: id(), nombre, importe, notas: document.getElementById('cli-notas').value, activo: clienteActivoTemp });
+  }
+  save(); renderAll(); closeModal('modal-cliente');
+  document.getElementById('cli-nombre').value = '';
+  document.getElementById('cli-importe').value = '';
+  document.getElementById('cli-notas').value = '';
+  clienteActivoTemp = true;
+  document.getElementById('cli-activo-toggle').classList.add('on');
+  toast('Cliente guardado');
+}
+
+function editCliente(cid) {
+  const c = state.clientes.find(x => x.id === cid);
+  if (!c) return;
+  state.editId = cid;
+  document.getElementById('cli-nombre').value = c.nombre;
+  document.getElementById('cli-importe').value = c.importe;
+  document.getElementById('cli-notas').value = c.notas || '';
+  clienteActivoTemp = c.activo;
+  document.getElementById('cli-activo-toggle').classList.toggle('on', c.activo);
+  openModal('modal-cliente');
+}
+
+function deleteCliente(cid) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  state.clientes = state.clientes.filter(x => x.id !== cid);
+  save(); renderAll(); toast('Cliente eliminado');
+}
+
+function renderTablaClientes() {
+  const tb = document.getElementById('tabla-clientes');
+  if (!state.clientes.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◎</div><p>No hay clientes fijos. Añade el primero.</p></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = state.clientes.map(c => {
+    const rep = calcImporteRepartido(c);
+    return `<tr>
+      <td><strong>${c.nombre}</strong></td>
+      <td class="td-mono">${fmt(c.importe)}</td>
+      <td class="td-mono td-accent">${fmt(rep)}</td>
+      <td><span class="badge ${c.activo ? 'badge-green' : 'badge-red'}">${c.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td style="color:var(--text3); font-size:12px">${c.notas || '—'}</td>
+      <td style="display:flex; gap:6px">
+        <button class="btn-icon" onclick="editCliente('${c.id}')">✎</button>
+        <button class="btn-icon btn-danger" onclick="deleteCliente('${c.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ========== SERVICIOS ==========
+function calcServicio() {
+  const precio = parseFloat(document.getElementById('srv-precio').value) || 0;
+  const pct = parseFloat(document.getElementById('srv-comision').value) || 0;
+  document.getElementById('srv-neto').value = fmtN(precio - precio * pct / 100);
+}
+
+function toggleServicio() {
+  servicioActivoTemp = !servicioActivoTemp;
+  document.getElementById('srv-activo-toggle').classList.toggle('on', servicioActivoTemp);
+}
+
+function guardarServicio() {
+  const nombre = document.getElementById('srv-nombre').value.trim();
+  const precio = parseFloat(document.getElementById('srv-precio').value) || 0;
+  const comision = parseFloat(document.getElementById('srv-comision').value) || 0;
+  if (!nombre) { toast('El nombre es obligatorio', true); return; }
+  if (state.editId) {
+    const s = state.servicios.find(x => x.id === state.editId);
+    if (s) { s.nombre = nombre; s.precio = precio; s.comision = comision; s.categoria = document.getElementById('srv-categoria').value; s.activo = servicioActivoTemp; }
+  } else {
+    state.servicios.push({ id: id(), nombre, precio, comision, categoria: document.getElementById('srv-categoria').value, activo: servicioActivoTemp });
+  }
+  save(); renderAll(); closeModal('modal-servicio');
+  document.getElementById('srv-nombre').value = '';
+  document.getElementById('srv-precio').value = '';
+  document.getElementById('srv-comision').value = '0';
+  document.getElementById('srv-neto').value = '';
+  document.getElementById('srv-categoria').value = '';
+  servicioActivoTemp = true;
+  document.getElementById('srv-activo-toggle').classList.add('on');
+  toast('Servicio guardado');
+}
+
+function editServicio(sid) {
+  const s = state.servicios.find(x => x.id === sid);
+  if (!s) return;
+  state.editId = sid;
+  document.getElementById('srv-nombre').value = s.nombre;
+  document.getElementById('srv-precio').value = s.precio;
+  document.getElementById('srv-comision').value = s.comision;
+  document.getElementById('srv-categoria').value = s.categoria || '';
+  servicioActivoTemp = s.activo;
+  document.getElementById('srv-activo-toggle').classList.toggle('on', s.activo);
+  calcServicio();
+  openModal('modal-servicio');
+}
+
+function deleteServicio(sid) {
+  if (!confirm('¿Eliminar este servicio?')) return;
+  state.servicios = state.servicios.filter(x => x.id !== sid);
+  save(); renderAll(); toast('Servicio eliminado');
+}
+
+function renderTablaServicios() {
+  const tb = document.getElementById('tabla-servicios');
+  if (!state.servicios.length) {
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◇</div><p>No hay servicios. Añade el primero.</p></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = state.servicios.map(s => {
+    const neto = s.precio - s.precio * s.comision / 100;
+    return `<tr>
+      <td><strong>${s.nombre}</strong></td>
+      <td><span class="chip">${s.categoria || '—'}</span></td>
+      <td class="td-mono">${fmt(s.precio)}</td>
+      <td class="td-mono">${s.comision}%</td>
+      <td class="td-mono td-positive">${fmt(neto)}</td>
+      <td><span class="badge ${s.activo ? 'badge-green' : 'badge-red'}">${s.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td style="display:flex; gap:6px">
+        <button class="btn-icon" onclick="editServicio('${s.id}')">✎</button>
+        <button class="btn-icon btn-danger" onclick="deleteServicio('${s.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ========== INGRESOS ==========
+function populateServiciosSelect() {
+  const sel = document.getElementById('ing-servicio');
+  sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+    state.servicios.filter(s => s.activo).map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+}
+
+function calcIngreso() {
+  const bruto = parseFloat(document.getElementById('ing-bruto').value) || 0;
+  const comision = bruto * state.config.comisionGestoria / 100;
+  document.getElementById('ing-comision').value = fmtN(comision);
+  document.getElementById('ing-neto').value = fmtN(bruto - comision);
+}
+
+function guardarIngreso() {
+  const fecha = document.getElementById('ing-fecha').value;
+  const cliente = document.getElementById('ing-cliente').value.trim();
+  const bruto = parseFloat(document.getElementById('ing-bruto').value) || 0;
+  if (!fecha || !cliente || !bruto) { toast('Completa los campos obligatorios', true); return; }
+  const d = new Date(fecha);
+  const mes = d.getMonth() + 1;
+  const anio = d.getFullYear();
+  const comision = bruto * state.config.comisionGestoria / 100;
+  const srvId = document.getElementById('ing-servicio').value;
+  const srv = state.servicios.find(s => s.id === srvId);
+  state.ingresos.push({
+    id: id(), fecha, mes, anio, cliente, servicioId: srvId,
+    servicio: srv ? srv.nombre : '', bruto, comision, neto: bruto - comision,
+    obs: document.getElementById('ing-obs').value
+  });
+  save(); renderAll(); closeModal('modal-ingreso');
+  document.getElementById('ing-fecha').value = '';
+  document.getElementById('ing-cliente').value = '';
+  document.getElementById('ing-bruto').value = '';
+  document.getElementById('ing-obs').value = '';
+  toast('Ingreso guardado');
+}
+
+function deleteIngreso(iid) {
+  if (!confirm('¿Eliminar este ingreso?')) return;
+  state.ingresos = state.ingresos.filter(x => x.id !== iid);
+  save(); renderAll(); toast('Ingreso eliminado');
+}
+
+function renderTablaIngresos() {
+  const tb = document.getElementById('tabla-ingresos');
+  const data = state.ingresos.filter(i => i.mes == currentMes && i.anio == currentAnio);
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⊕</div><p>No hay ingresos registrados este mes</p></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(i => `<tr>
+    <td class="td-mono">${i.fecha}</td>
+    <td>${i.cliente}</td>
+    <td><span class="chip">${i.servicio || '—'}</span></td>
+    <td class="td-amount">${fmt(i.bruto)}</td>
+    <td class="td-amount td-negative">−${fmt(i.comision)}</td>
+    <td class="td-amount td-positive">${fmt(i.neto)}</td>
+    <td style="font-size:12px; color:var(--text3)">${i.obs || '—'}</td>
+    <td><button class="btn-icon btn-danger" onclick="deleteIngreso('${i.id}')">✕</button></td>
+  </tr>`).join('');
+}
+
+// ========== GASTOS ==========
+function guardarGasto() {
+  const fecha = document.getElementById('gst-fecha').value;
+  const importe = parseFloat(document.getElementById('gst-importe').value) || 0;
+  if (!fecha || !importe) { toast('Completa los campos obligatorios', true); return; }
+  const d = new Date(fecha);
+  state.gastos.push({
+    id: id(), fecha, mes: d.getMonth() + 1, anio: d.getFullYear(),
+    categoria: document.getElementById('gst-categoria').value,
+    importe, descripcion: document.getElementById('gst-descripcion').value,
+    tipo: document.getElementById('gst-tipo').value
+  });
+  save(); renderAll(); closeModal('modal-gasto');
+  document.getElementById('gst-fecha').value = '';
+  document.getElementById('gst-importe').value = '';
+  document.getElementById('gst-descripcion').value = '';
+  toast('Gasto guardado');
+}
+
+function deleteGasto(gid) {
+  if (!confirm('¿Eliminar este gasto?')) return;
+  state.gastos = state.gastos.filter(x => x.id !== gid);
+  save(); renderAll(); toast('Gasto eliminado');
+}
+
+function renderTablaGastos() {
+  const tb = document.getElementById('tabla-gastos');
+  const data = state.gastos.filter(g => g.mes == currentMes && g.anio == currentAnio);
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◌</div><p>No hay gastos registrados este mes</p></div></td></tr>';
+    return;
+  }
+  const cats = { autonomo: 'Autónomo', colegiacion: 'Colegiación', gestoria: 'Gestoría', variable: 'Variable', otro: 'Otro' };
+  tb.innerHTML = data.map(g => `<tr>
+    <td class="td-mono">${g.fecha}</td>
+    <td><span class="badge badge-red">${cats[g.categoria] || g.categoria}</span></td>
+    <td>${g.descripcion || '—'}</td>
+    <td class="td-amount td-negative">${fmt(g.importe)}</td>
+    <td><span class="badge ${g.tipo === 'fijo' ? 'badge-gold' : 'badge-red'}">${g.tipo === 'fijo' ? 'Fijo' : 'Variable'}</span></td>
+    <td><button class="btn-icon btn-danger" onclick="deleteGasto('${g.id}')">✕</button></td>
+  </tr>`).join('');
+}
+
+// ========== RETIROS ==========
+function guardarRetiro() {
+  const mes = parseInt(document.getElementById('ret-mes').value);
+  const anio = parseInt(document.getElementById('ret-anio').value);
+  const importe = parseFloat(document.getElementById('ret-importe').value) || 0;
+  if (!importe) { toast('El importe es obligatorio', true); return; }
+  state.retiros.push({ id: id(), mes, anio, importe, concepto: document.getElementById('ret-concepto').value });
+  save(); renderAll(); closeModal('modal-retiro');
+  document.getElementById('ret-importe').value = '';
+  document.getElementById('ret-concepto').value = '';
+  toast('Retiro guardado');
+}
+
+function deleteRetiro(rid) {
+  if (!confirm('¿Eliminar este retiro?')) return;
+  state.retiros = state.retiros.filter(x => x.id !== rid);
+  save(); renderAll(); toast('Retiro eliminado');
+}
+
+function renderTablaRetiros() {
+  const tb = document.getElementById('tabla-retiros');
+  const data = state.retiros.filter(r => r.mes == currentMes && r.anio == currentAnio);
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">◎</div><p>No hay retiros registrados este mes</p></div></td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(r => `<tr>
+    <td class="td-mono">${meses[r.mes-1]} ${r.anio}</td>
+    <td>${r.concepto || '—'}</td>
+    <td class="td-amount td-negative">${fmt(r.importe)}</td>
+    <td><button class="btn-icon btn-danger" onclick="deleteRetiro('${r.id}')">✕</button></td>
+  </tr>`).join('');
+}
+
+// ========== RESUMEN MENSUAL ==========
+function renderResumen() {
+  const r = calcMensual(currentMes, currentAnio);
+
+  const set = (id, val, cls) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = fmt(val); el.className = 'resumen-value' + (cls ? ' ' + cls : ''); }
+  };
+
+  set('res-ingresos-total', r.ingTotal, 'td-accent');
+  set('res-ingresos-fijos', r.ingFijos);
+  set('res-var-brutos', r.varBrutos);
+  set('res-comision-gest', r.comisionGest, 'td-negative');
+  set('res-var-neto', r.varNeto);
+  set('res-gastos-total', r.gTotal, 'td-negative');
+  set('res-g-autonomo', r.gAutonomo);
+  set('res-g-irpf', r.gIRPF);
+  set('res-g-gestoria', r.gGestoria);
+  set('res-g-coleg', r.gColeg);
+  set('res-g-otros', r.gOtros);
+  set('res-retirada', r.retirada, 'td-negative');
+
+  const ben = document.getElementById('res-beneficio');
+  if (ben) { ben.textContent = fmt(r.beneficio); ben.className = 'resumen-value resumen-total ' + (r.beneficio >= 0 ? 'td-positive' : 'td-negative'); }
+  const aho = document.getElementById('res-ahorro');
+  if (aho) { aho.textContent = fmt(r.ahorro); aho.style.color = r.ahorro >= 0 ? 'var(--accent)' : 'var(--red)'; }
+  const acu = document.getElementById('res-acumulado');
+  if (acu) { acu.textContent = fmt(r.acumulado + r.ahorro); }
+
+  // Chart
+  const items = [
+    { label: 'Ing. Fijos', val: r.ingFijos, color: '#e8d5a3' },
+    { label: 'Ing. Var.', val: r.varNeto, color: '#7fba8a' },
+    { label: 'Autónomo', val: r.gAutonomo, color: '#d97070' },
+    { label: 'IRPF', val: r.gIRPF, color: '#d97070' },
+    { label: 'Gestoría', val: r.gGestoria, color: '#c47070' },
+    { label: 'Coleg.', val: r.gColeg, color: '#c47070' },
+    { label: 'Retirada', val: r.retirada, color: '#7fb3d9' }
+  ];
+  const maxVal = Math.max(...items.map(i => i.val), 1);
+  const chart = document.getElementById('res-chart');
+  if (chart) chart.innerHTML = items.map(i => `
+    <div class="chart-bar-row">
+      <div class="chart-bar-label">${i.label}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(i.val/maxVal*100,0)}%; background:${i.color}"></div></div>
+      <div class="chart-bar-val">${fmt(i.val)}</div>
+    </div>`).join('');
+
+  // Clientes fijos tabla
+  const ctb = document.getElementById('res-clientes-tabla');
+  const activeClients = state.clientes.filter(c => c.activo);
+  if (ctb) {
+    if (!activeClients.length) ctb.innerHTML = '<tr><td colspan="2" style="color:var(--text3); font-size:12px; padding:12px">Sin clientes activos</td></tr>';
+    else ctb.innerHTML = activeClients.map(c => `<tr>
+      <td>${c.nombre}</td>
+      <td class="td-mono td-accent">${fmt(calcImporteRepartido(c))}</td>
+    </tr>`).join('');
+  }
+}
+
+// ========== DASHBOARD ==========
+function renderDashboard() {
+  const r = calcMensual(currentMes, currentAnio);
+
+  const setV = (id, val, positive) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = fmt(val);
+    el.className = 'stat-value' + (positive === true ? ' positive' : positive === false ? ' negative' : '');
+    if (val < 0) el.style.color = 'var(--red)';
+    else el.style.color = '';
+  };
+
+  setV('dash-ingresos', r.ingTotal, true);
+  setV('dash-gastos', r.gTotal, false);
+
+  const ben = document.getElementById('dash-beneficio');
+  if (ben) { ben.textContent = fmt(r.beneficio); ben.style.color = r.beneficio >= 0 ? 'var(--accent3)' : 'var(--red)'; }
+  const acu = document.getElementById('dash-acumulado');
+  if (acu) { acu.textContent = fmt(r.acumulado + r.ahorro); acu.style.color = (r.acumulado+r.ahorro) >= 0 ? 'var(--blue)' : 'var(--red)'; }
+
+  // Charts ingresos
+  const ci = document.getElementById('dash-chart-ingresos');
+  if (ci) {
+    const items = [
+      { label: 'Fijos', val: r.ingFijos, color: '#e8d5a3' },
+      { label: 'Variables', val: r.varNeto, color: '#7fba8a' }
+    ];
+    const mx = Math.max(...items.map(i => i.val), 1);
+    ci.innerHTML = items.map(i => `<div class="chart-bar-row">
+      <div class="chart-bar-label">${i.label}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(i.val/mx*100,0)}%; background:${i.color}"></div></div>
+      <div class="chart-bar-val">${fmt(i.val)}</div>
+    </div>`).join('');
+  }
+
+  // Charts gastos
+  const cg = document.getElementById('dash-chart-gastos');
+  if (cg) {
+    const items = [
+      { label: 'Autónomo', val: r.gAutonomo, color: '#d97070' },
+      { label: 'IRPF', val: r.gIRPF, color: '#c47070' },
+      { label: 'Gestoría', val: r.gGestoria, color: '#b46060' },
+      { label: 'Colegiación', val: r.gColeg, color: '#a45050' },
+      { label: 'Otros', val: r.gOtros, color: '#944040' }
+    ];
+    const mx = Math.max(...items.map(i => i.val), 1);
+    cg.innerHTML = items.map(i => `<div class="chart-bar-row">
+      <div class="chart-bar-label">${i.label}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.max(i.val/mx*100,0)}%; background:${i.color}"></div></div>
+      <div class="chart-bar-val">${fmt(i.val)}</div>
+    </div>`).join('');
+  }
+
+  // Últimas operaciones
+  const ops = [];
+  state.ingresos.filter(i => i.mes == currentMes && i.anio == currentAnio)
+    .forEach(i => ops.push({ fecha: i.fecha, tipo: 'Ingreso', concepto: i.cliente + ' — ' + (i.servicio || ''), importe: i.neto, pos: true }));
+  state.gastos.filter(g => g.mes == currentMes && g.anio == currentAnio)
+    .forEach(g => ops.push({ fecha: g.fecha, tipo: 'Gasto', concepto: g.descripcion || g.categoria, importe: -g.importe, pos: false }));
+
+  ops.sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const tb = document.getElementById('dash-operaciones');
+  if (tb) {
+    if (!ops.length) tb.innerHTML = '<tr><td colspan="4"><div class="empty-state"><p>Sin operaciones este mes</p></div></td></tr>';
+    else tb.innerHTML = ops.slice(0, 8).map(o => `<tr>
+      <td class="td-mono" style="font-size:12px">${o.fecha}</td>
+      <td><span class="badge ${o.pos ? 'badge-green' : 'badge-red'}">${o.tipo}</span></td>
+      <td>${o.concepto}</td>
+      <td class="td-amount ${o.pos ? 'td-positive' : 'td-negative'}">${fmt(Math.abs(o.importe))}</td>
+    </tr>`).join('');
+  }
+}
+
+// ========== PROYECCION ==========
+function calcularProyeccion() {
+  const numMeses = parseInt(document.getElementById('proy-meses').value) || 6;
+  const varPrevistas = parseFloat(document.getElementById('proy-variables').value) || 0;
+  const gastosExtra = parseFloat(document.getElementById('proy-gastos-extra').value) || 0;
+  const cfg = state.config;
+
+  const ingFijos = state.clientes.filter(c => c.activo).reduce((a,c) => a + calcImporteRepartido(c), 0);
+  const comisionVar = varPrevistas * cfg.comisionGestoria / 100;
+  const varNeto = varPrevistas - comisionVar;
+  const ingTotal = ingFijos + varNeto;
+  const gFijos = cfg.autonomo + (ingTotal * cfg.irpf / 100) + cfg.gastoGestoria + (cfg.colegTrimestral / 3) + gastosExtra;
+  const beneficio = ingTotal - gFijos;
+  const ahorro = beneficio - cfg.nomina;
+
+  // Acumulado actual
+  let acum = 0;
+  const mesesConDatos = new Set([
+    ...state.ingresos.map(i => `${i.anio}-${i.mes}`),
+    ...state.gastos.map(g => `${g.anio}-${g.mes}`)
+  ]);
+  mesesConDatos.forEach(key => {
+    const [y, m] = key.split('-').map(Number);
+    const prev = calcMensualSimple(m, y);
+    acum += prev.ahorro;
+  });
+
+  const rows = [];
+  let m = currentMes, y = currentAnio;
+  let acumProy = acum;
+  for (let i = 0; i < numMeses; i++) {
+    acumProy += ahorro;
+    rows.push({ mes: `${meses[m-1]} ${y}`, ingFijos, varPrev: varNeto, gastos: gFijos, beneficio, ahorro, acumulado: acumProy });
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+
+  const tb = document.getElementById('tabla-proyeccion');
+  tb.innerHTML = rows.map(r => `<tr>
+    <td class="td-mono">${r.mes}</td>
+    <td class="td-amount">${fmt(r.ingFijos)}</td>
+    <td class="td-amount">${fmt(r.varPrev)}</td>
+    <td class="td-amount td-negative">${fmt(r.gastos)}</td>
+    <td class="td-amount ${r.beneficio >= 0 ? 'td-positive' : 'td-negative'}">${fmt(r.beneficio)}</td>
+    <td class="td-amount ${r.ahorro >= 0 ? 'td-positive' : 'td-negative'}">${fmt(r.ahorro)}</td>
+    <td class="td-amount td-accent">${fmt(r.acumulado)}</td>
+  </tr>`).join('');
+}
+
+// ========== INFORMES ==========
+function renderInformes() {
+  // Ingresos por cliente
+  const porCliente = {};
+  state.ingresos.forEach(i => {
+    porCliente[i.cliente] = (porCliente[i.cliente] || 0) + i.neto;
+  });
+  const cliItems = Object.entries(porCliente).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const maxCli = Math.max(...cliItems.map(x => x[1]), 1);
+  const ciEl = document.getElementById('inf-clientes-chart');
+  if (ciEl) {
+    if (!cliItems.length) ciEl.innerHTML = '<div class="empty-state"><p>Sin datos</p></div>';
+    else ciEl.innerHTML = cliItems.map(([name, val]) => `<div class="chart-bar-row">
+      <div class="chart-bar-label" style="width:90px; font-size:10px">${name.slice(0,10)}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${val/maxCli*100}%; background:#7fba8a"></div></div>
+      <div class="chart-bar-val">${fmt(val)}</div>
+    </div>`).join('');
+  }
+
+  // Gastos por categoría (todos)
+  const porCat = {};
+  state.gastos.forEach(g => {
+    porCat[g.categoria] = (porCat[g.categoria] || 0) + g.importe;
+  });
+  const cats = { autonomo: 'Autónomo', colegiacion: 'Colegiación', gestoria: 'Gestoría', variable: 'Variable', otro: 'Otro' };
+  const catItems = Object.entries(porCat).sort((a,b) => b[1]-a[1]);
+  const maxCat = Math.max(...catItems.map(x => x[1]), 1);
+  const cgEl = document.getElementById('inf-gastos-chart');
+  if (cgEl) {
+    if (!catItems.length) cgEl.innerHTML = '<div class="empty-state"><p>Sin datos</p></div>';
+    else cgEl.innerHTML = catItems.map(([cat, val]) => `<div class="chart-bar-row">
+      <div class="chart-bar-label" style="width:90px; font-size:10px">${cats[cat] || cat}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${val/maxCat*100}%; background:#d97070"></div></div>
+      <div class="chart-bar-val">${fmt(val)}</div>
+    </div>`).join('');
+  }
+
+  // Evolución ahorro
+  const ahoEl = document.getElementById('inf-ahorro-chart');
+  if (ahoEl) {
+    const mesesData = new Set([
+      ...state.ingresos.map(i => `${i.anio}-${String(i.mes).padStart(2,'0')}`),
+      ...state.gastos.map(g => `${g.anio}-${String(g.mes).padStart(2,'0')}`),
+      ...state.retiros.map(r => `${r.anio}-${String(r.mes).padStart(2,'0')}`)
+    ]);
+    const sorted = Array.from(mesesData).sort().slice(-12);
+    if (!sorted.length) { ahoEl.innerHTML = '<div class="empty-state"><p>Sin datos históricos</p></div>'; }
+    else {
+      const vals = sorted.map(key => {
+        const [y, m] = key.split('-').map(Number);
+        return { label: `${meses[m-1]} ${y}`, val: calcMensualSimple(m, y).ahorro };
+      });
+      const maxV = Math.max(...vals.map(v => Math.abs(v.val)), 1);
+      ahoEl.innerHTML = vals.map(v => `<div class="chart-bar-row">
+        <div class="chart-bar-label" style="width:90px; font-size:10px">${v.label}</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.abs(v.val)/maxV*100}%; background:${v.val >= 0 ? '#e8d5a3' : '#d97070'}"></div></div>
+        <div class="chart-bar-val ${v.val >= 0 ? 'td-accent' : 'td-negative'}">${fmt(v.val)}</div>
+      </div>`).join('');
+    }
+  }
+}
+
+// ========== EXPORT / IMPORT ==========
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'autonomagest_backup.json';
+  a.click();
+  toast('Datos exportados');
+}
+
+function importData() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json';
+  inp.onchange = e => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        state = JSON.parse(ev.target.result);
+        save(); syncConfigUI(); renderAll();
+        toast('Datos importados correctamente');
+      } catch(err) { toast('Error al importar el archivo', true); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  inp.click();
+}
+
+function exportCSV() {
+  const rows = [['Tipo','Fecha','Mes','Año','Concepto','Importe']];
+  state.ingresos.forEach(i => rows.push(['Ingreso', i.fecha, i.mes, i.anio, i.cliente + ' - ' + i.servicio, i.neto]));
+  state.gastos.forEach(g => rows.push(['Gasto', g.fecha, g.mes, g.anio, g.descripcion, -g.importe]));
+  state.retiros.forEach(r => rows.push(['Retiro', '', r.mes, r.anio, r.concepto, -r.importe]));
+  const csv = rows.map(r => r.join(';')).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'autonomagest_export.csv';
+  a.click();
+  toast('CSV exportado');
+}
+
+function exportPDF() {
+  const r = calcMensual(currentMes, currentAnio);
+  const mesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][currentMes-1];
+  const content = `
+    <html><head><style>
+      body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+      h1 { color: #8B6914; border-bottom: 2px solid #8B6914; padding-bottom: 10px; }
+      h2 { color: #555; font-size: 16px; margin-top: 24px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      td { padding: 8px; border-bottom: 1px solid #eee; }
+      td:last-child { text-align: right; font-weight: bold; }
+      .total { background: #f9f5ec; font-size: 18px; }
+      .positive { color: #3a7a3a; }
+      .negative { color: #a33; }
+    </style></head><body>
+    <h1>Resumen Mensual — ${mesNombre} ${currentAnio}</h1>
+    <h2>Ingresos</h2>
+    <table>
+      <tr><td>Ingresos fijos (clientes activos)</td><td class="positive">${fmt(r.ingFijos)}</td></tr>
+      <tr><td>Ingresos variables brutos</td><td>${fmt(r.varBrutos)}</td></tr>
+      <tr><td>— Comisión gestoría variables</td><td class="negative">−${fmt(r.comisionGest)}</td></tr>
+      <tr><td>Ingreso variable neto</td><td>${fmt(r.varNeto)}</td></tr>
+      <tr class="total"><td><strong>TOTAL INGRESOS</strong></td><td class="positive"><strong>${fmt(r.ingTotal)}</strong></td></tr>
+    </table>
+    <h2>Gastos</h2>
+    <table>
+      <tr><td>Cuota autónomo</td><td class="negative">${fmt(r.gAutonomo)}</td></tr>
+      <tr><td>IRPF estimado</td><td class="negative">${fmt(r.gIRPF)}</td></tr>
+      <tr><td>Gestoría</td><td class="negative">${fmt(r.gGestoria)}</td></tr>
+      <tr><td>Colegiación mensual</td><td class="negative">${fmt(r.gColeg)}</td></tr>
+      <tr><td>Otros gastos registrados</td><td class="negative">${fmt(r.gOtros)}</td></tr>
+      <tr class="total"><td><strong>TOTAL GASTOS</strong></td><td class="negative"><strong>−${fmt(r.gTotal)}</strong></td></tr>
+    </table>
+    <h2>Resultado</h2>
+    <table>
+      <tr class="total"><td><strong>BENEFICIO</strong></td><td class="${r.beneficio>=0?'positive':'negative'}"><strong>${fmt(r.beneficio)}</strong></td></tr>
+      <tr><td>— Retirada personal</td><td class="negative">−${fmt(r.retirada)}</td></tr>
+      <tr class="total"><td><strong>AHORRO MENSUAL</strong></td><td class="${r.ahorro>=0?'positive':'negative'}"><strong>${fmt(r.ahorro)}</strong></td></tr>
+      <tr><td>Ahorro acumulado (histórico)</td><td>${fmt(r.acumulado + r.ahorro)}</td></tr>
+    </table>
+    <p style="margin-top:40px; color:#999; font-size:12px">Generado con AutónomaGest — ${new Date().toLocaleDateString('es-ES')}</p>
+    </body></html>`;
+  const win = window.open('', '_blank');
+  win.document.write(content);
+  win.document.close();
+  win.print();
+}
+
+// ========== START ==========
+init();
+</script>
+</body>
+</html>
